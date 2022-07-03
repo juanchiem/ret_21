@@ -1,0 +1,30 @@
+---
+title: "Untitled"
+output: html_document
+date: '2022-07-03'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+pacman::p_load(tidyverse, rio, janitor)
+
+ret21 <- bind_rows(
+  import_list(file= "data/ret_sur_21.xlsx",  col_types = rep("text", 9)),
+  .id = "id") %>% 
+  remove_empty() %>% 
+  clean_names()
+
+ret21
+
+library(readxl)
+sheet = excel_sheets("data/ret_sur_21.xlsx")
+ret21s = lapply(setNames(sheet, sheet), 
+                    function(x) read_excel("data/ret_sur_21.xlsx", sheet=x,
+                                           col_types = rep("text", 9)))
+ret21 = bind_rows(ret21s, .id="Sheet")
+ret21
+```
+
