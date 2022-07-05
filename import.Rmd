@@ -17,14 +17,46 @@ ret21 <- bind_rows(
   remove_empty() %>% 
   clean_names()
 
-ret21
+ret21 %>% str
 
-library(readxl)
-sheet = excel_sheets("data/ret_sur_21.xlsx")
-ret21s = lapply(setNames(sheet, sheet), 
-                    function(x) read_excel("data/ret_sur_21.xlsx", sheet=x,
-                                           col_types = rep("text", 9)))
-ret21 = bind_rows(ret21s, .id="Sheet")
-ret21
+ret21_RA <- ret21 %>%   
+  separate(id, c("sitio", "ciclo")) %>% 
+  mutate(RA= as.integer(stringr::str_extract(roya_estriada, "\\d+")))  %>% 
+  select(sitio, ciclo, cultivar, contains("RA")) %>% 
+  drop_na(RA) %>% 
+  tibble
+ret21_RA
+# library(readxl)
+# sheet = excel_sheets("data/ret_sur_21.xlsx")
+# ret21s = lapply(setNames(sheet, sheet), 
+#                     function(x) read_excel("data/ret_sur_21.xlsx", sheet=x,
+#                                            col_types = rep("text", 9)))
+# ret21 = bind_rows(ret21s, .id="Sheet") %>% 
+#   separate("Sheet", c("sitio", "ciclo")) %>% 
+#   select(sitio, ciclo, Cultivar, RA) 
+
+```
+
+
+```{r}
+theme_set(theme_bw(base_size=16))
+
+ret21_RA %>% 
+  mutate(ciclo_=case_when(
+  str_detect(ciclo, "L")~ "L",
+  TRUE ~ "C")) %>% 
+  group_by(sitio, ciclo_) %>% 
+  mutate(
+    RA_mean= mean(RA), 
+    RA_ratio= RA/RA_mean) %>% ungroup() %>% 
+  group_by(ciclo_, cultivar) %>% 
+  summarise(RA_ratio = mean(RA_ratio)) %>% 
+  ggplot(aes(x = RA_ratio, y = ..count.., fill = ..x..)) +
+  geom_histogram(binwidth = .1, pad = TRUE) +
+  scale_fill_gradient(low = "#4B9500", 
+                       high = "red") +
+  facet_wrap("ciclo_", scales = "free")   +
+  guides(fill="none") +
+  labs(x="Susceptibilidad frente a RA")
 ```
 
